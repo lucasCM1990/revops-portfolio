@@ -1,0 +1,19 @@
+# Raw data is downloaded, not versioned — see each piece's data/raw/SOURCE.md
+*/data/raw/*
+!*/data/raw/SOURCE.md
+
+# Tableau
+*.twb
+*.twbx
+*.hyper
+.~lock*
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+
+# macOS
+.DS_Store
+sql/*.sqlite

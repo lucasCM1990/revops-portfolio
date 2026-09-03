@@ -1,0 +1,2 @@
+churn_rate,grr,starting_margin,churned_margin,active_margin,top_decile_margin_share,top_decile_account_share,top_decile_margin_value,model_auc,avg_margin_churned,avg_margin_active
+0.09715185540188963,0.8827789501670131,2764397.6100000003,324045.58999999997,2440352.02,0.17881401388968465,0.0999469174186699,436369.14,0.6340702388428233,228.3619379844961,185.05740653674073

@@ -1,0 +1,283 @@
+/* "Retention Book" design system — ported from the Claude Design mockup
+   (Desktop/Retention Book.html). Tokens copied verbatim from its :root block;
+   layout/components rebuilt for Dash. */
+
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap');
+
+:root {
+    --color-bg: #f2f2f3;
+    --color-surface: #e9e9ea;
+    --color-text: #1d1f20;
+    --color-accent: #5980a6;
+    --color-divider: rgba(29, 31, 32, 0.16);
+
+    --color-neutral-100: #f5f5f8;
+    --color-neutral-500: #98989b;
+    --color-neutral-600: #7a7a7d;
+    --color-neutral-700: #5d5d60;
+    --color-neutral-800: #424244;
+    --color-neutral-900: #2b2b2d;
+
+    --color-accent-100: #eef6ff;
+    --color-accent-200: #d6ebff;
+    --color-accent-400: #94bce3;
+    --color-accent-600: #597ea3;
+    --color-accent-700: #416180;
+    --color-accent-800: #2c455d;
+    --color-accent-900: #1d2d3d;
+
+    --color-critical: #b23b3b;
+    --color-critical-bg: #fbe9e9;
+
+    --font-heading: 'Barlow Condensed', system-ui, sans-serif;
+    --font-body: 'Barlow', system-ui, sans-serif;
+
+    --space-2: 7px;
+    --space-3: 10px;
+    --space-4: 14px;
+    --space-6: 20px;
+    --space-8: 27px;
+
+    --radius-md: 4px;
+}
+
+body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-body);
+}
+
+.rb-eyebrow {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-neutral-600);
+}
+
+.rb-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1px solid var(--color-divider);
+    padding-bottom: var(--space-4);
+    margin-bottom: var(--space-6);
+    flex-wrap: wrap;
+    gap: var(--space-4);
+}
+
+.rb-title {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 26px;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+}
+
+.rb-subtitle {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-neutral-600);
+    margin-top: 2px;
+}
+
+.rb-meta {
+    text-align: right;
+    font-size: 12px;
+    color: var(--color-neutral-600);
+    letter-spacing: 0.04em;
+}
+
+/* -- blueprint corner marks: the signature motif of the source design -- */
+.blueprint {
+    position: relative;
+    border: 1px solid var(--color-divider);
+    border-radius: 0;
+}
+.blueprint > .corner {
+    position: absolute;
+    width: 11px;
+    height: 11px;
+    color: rgba(29, 31, 32, 0.55);
+}
+.blueprint > .corner::before,
+.blueprint > .corner::after {
+    content: "";
+    position: absolute;
+    background: currentcolor;
+}
+.blueprint > .corner::before { left: 5px; top: 0; width: 1px; height: 100%; }
+.blueprint > .corner::after { top: 5px; left: 0; width: 100%; height: 1px; }
+.blueprint > .corner.tl { top: -6px; left: -6px; }
+.blueprint > .corner.tr { top: -6px; right: -6px; }
+.blueprint > .corner.bl { bottom: -6px; left: -6px; }
+.blueprint > .corner.br { bottom: -6px; right: -6px; }
+
+.rb-card {
+    background: transparent;
+    border: 1px solid var(--color-divider);
+    border-radius: 0;
+    padding: var(--space-4);
+}
+
+.rb-kpi-label {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-accent-700);
+}
+
+.rb-kpi-value {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 42px;
+    line-height: 1.05;
+    margin-top: var(--space-2);
+}
+
+.rb-kpi-note {
+    font-size: 12.5px;
+    color: var(--color-neutral-700);
+    margin-top: var(--space-2);
+    line-height: 1.4;
+}
+
+.rb-kpi-dark {
+    background: var(--color-accent-900);
+    color: var(--color-neutral-100);
+    border-color: var(--color-accent-900);
+}
+.rb-kpi-dark .rb-kpi-label { color: var(--color-accent-400); }
+.rb-kpi-dark .rb-kpi-note { color: rgba(245, 245, 248, 0.65); }
+
+.rb-section-title {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 20px;
+    margin-bottom: var(--space-2);
+}
+
+.rb-section-note {
+    font-size: 12.5px;
+    color: var(--color-neutral-600);
+    margin-bottom: var(--space-4);
+}
+
+.rb-question {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: var(--space-2);
+}
+
+.rb-glossary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-6);
+    font-size: 13px;
+    color: var(--color-neutral-700);
+}
+.rb-glossary b {
+    color: var(--color-text);
+    font-family: var(--font-heading);
+    font-weight: 600;
+}
+
+/* segmented filter chips (band filter, sort toggle) */
+.rb-seg {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+.rb-seg .form-check {
+    margin: 0;
+}
+.rb-seg .form-check-input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.rb-seg .form-check-label {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 7px 14px;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    color: var(--color-text);
+}
+.rb-seg .form-check-input:checked + .form-check-label {
+    background: var(--color-accent);
+    color: var(--color-bg);
+    border-color: var(--color-accent);
+}
+
+.rb-tag {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    padding: 3px 9px;
+    border-radius: 3px;
+}
+.rb-tag-critical { background: #fbe9e9; color: #8a2c2c; }
+.rb-tag-atrisk { background: var(--color-accent-100); color: var(--color-accent-700); }
+.rb-tag-stable { background: var(--color-accent-200); color: var(--color-accent-800); }
+.rb-tag-strong { background: var(--color-accent-900); color: var(--color-neutral-100); }
+
+.rb-finding {
+    display: flex;
+    gap: var(--space-3);
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--color-divider);
+    font-size: 14px;
+    line-height: 1.5;
+}
+.rb-finding:last-child { border-bottom: none; }
+.rb-finding-num {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    color: var(--color-accent-600);
+    flex-shrink: 0;
+}
+
+/* tab bar, restyled to match the source's underline-tab look */
+.rb-tabs .nav-link {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-neutral-700);
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    padding: var(--space-3) var(--space-4);
+}
+.rb-tabs .nav-link.active {
+    color: var(--color-accent-900) !important;
+    background: var(--color-accent-100) !important;
+    border-bottom: 2px solid var(--color-accent-700);
+}
+
+.ag-theme-quartz {
+    --ag-font-family: var(--font-body);
+    --ag-header-font-family: var(--font-heading);
+    --ag-border-radius: 0;
+    --ag-wrapper-border-radius: 0;
+    --ag-header-background-color: var(--color-surface);
+    --ag-odd-row-background-color: #fafafa;
+    --ag-accent-color: var(--color-accent);
+}
