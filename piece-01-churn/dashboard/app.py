@@ -357,12 +357,20 @@ drivers_tab = html.Div([
     ], className='g-4 mb-4'),
 ])
 
+account_search = dbc.Input(
+    id='account-search',
+    type='text',
+    placeholder='Search by account ID…',
+    className='rb-search',
+)
+
 account_book_tab = html.Div([
     html.Div('Account book', className='rb-section-title'),
     html.Div(f"{len(clients):,} active accounts.", className='rb-section-note'),
     dbc.Row([
-        dbc.Col(band_filter, md=8),
-    ], className='mb-3'),
+        dbc.Col(band_filter, md=6),
+        dbc.Col(account_search, md=4),
+    ], className='mb-3 align-items-center'),
     accounts_grid,
 ])
 
@@ -379,12 +387,14 @@ app.layout = dbc.Container([
 @app.callback(
     Output('accounts-grid', 'rowData'),
     Input('band-filter', 'value'),
+    Input('account-search', 'value'),
 )
-def filter_grid_by_band(selected_band):
-    if selected_band == 'All':
-        filtered = clients
-    else:
-        filtered = clients[clients['health_band'] == selected_band]
+def filter_grid(selected_band, search_text):
+    filtered = clients
+    if selected_band != 'All':
+        filtered = filtered[filtered['health_band'] == selected_band]
+    if search_text:
+        filtered = filtered[filtered['id'].str.contains(search_text, case=False, na=False)]
     return filtered.sort_values('health_score').to_dict('records')
 
 

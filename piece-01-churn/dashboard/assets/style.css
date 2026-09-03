@@ -272,6 +272,18 @@ body {
     border-bottom: 2px solid var(--color-accent-700);
 }
 
+.rb-search {
+    font-family: var(--font-body);
+    font-size: 14px;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+}
+.rb-search:focus {
+    border-color: var(--color-accent);
+    box-shadow: none;
+}
+
 .ag-theme-quartz {
     --ag-font-family: var(--font-body);
     --ag-header-font-family: var(--font-heading);
