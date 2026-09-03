@@ -7,9 +7,11 @@ corners, plus-sign corner marks. Numbers here are real, computed from
 notebooks/01_churn_model.py -- the mockup used illustrative placeholder figures
 (e.g. "12 accounts, $426k MRR") that do not appear anywhere in this file.
 
-Two tabs: Overview (KPIs, charts, risk queue, findings) and Account Book
-(searchable/filterable grid of all active accounts). A third tab in the mockup,
-Account Detail (per-account drill-down), is not built yet.
+Three tabs: Overview (KPIs, charts, risk queue, findings), Drivers (five business
+questions answered from the raw data -- channel, tenure, product count,
+dual-fuel bundling, campaign quality), and Account Book (searchable/filterable
+grid of all active accounts). A fourth tab from the mockup, Account Detail
+(per-account drill-down), is not built yet.
 
 Data: curated public sample (Kaggle mirror of the BCG X Data Science Job
 Simulation dataset), not operational data from any employer. Risk score is an
@@ -17,7 +19,9 @@ illustrative baseline model (Random Forest, AUC 0.63) used only to rank accounts
 by relative risk -- see notebooks/01_churn_model.py for the full method and its
 limitations.
 """
+import os
 import datetime
+from pathlib import Path
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -26,12 +30,14 @@ import dash_bootstrap_components as dbc
 import dash_ag_grid as dag
 from dash import Dash, dcc, html, Input, Output
 
-CLEAN_DIR = '../data/clean'
+# resolved relative to this file, not the working directory the process is
+# started from -- matters once this runs under gunicorn on a host like Render
+CLEAN_DIR = Path(__file__).resolve().parent.parent / 'data' / 'clean'
 
-clients = pd.read_csv(f'{CLEAN_DIR}/clients_scored.csv')
-kpi = pd.read_csv(f'{CLEAN_DIR}/kpi_summary.csv').iloc[0]
-churn_drivers = pd.read_csv(f'{CLEAN_DIR}/churn_drivers.csv')
-campaign_value = pd.read_csv(f'{CLEAN_DIR}/campaign_value.csv')
+clients = pd.read_csv(CLEAN_DIR / 'clients_scored.csv')
+kpi = pd.read_csv(CLEAN_DIR / 'kpi_summary.csv').iloc[0]
+churn_drivers = pd.read_csv(CLEAN_DIR / 'churn_drivers.csv')
+campaign_value = pd.read_csv(CLEAN_DIR / 'campaign_value.csv')
 
 # small groups are noise, not signal -- exclude from charts (kept in the CSV export)
 MIN_N = 50
@@ -252,6 +258,7 @@ band_filter = html.Div([
 # ---------- app ----------
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.title = 'Retention Book'
+server = app.server  # the Flask instance gunicorn serves in production
 
 header = html.Div([
     html.Div([
@@ -399,4 +406,8 @@ def filter_grid(selected_band, search_text):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # local dev only -- in production (Render), gunicorn imports `server` above
+    # directly and never runs this block
+    debug = os.environ.get('DASH_DEBUG', 'true').lower() == 'true'
+    port = int(os.environ.get('PORT', 8050))
+    app.run(debug=debug, host='0.0.0.0', port=port)
