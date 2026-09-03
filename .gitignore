@@ -2,12 +2,6 @@
 */data/raw/*
 !*/data/raw/SOURCE.md
 
-# Tableau
-*.twb
-*.twbx
-*.hyper
-.~lock*
-
 # Python
 __pycache__/
 *.pyc
