@@ -4,7 +4,7 @@
 
 A retention / CS Ops analysis of a B2B energy retailer's customer book: who is at risk, why, and what to do about each finding — not just a churn dashboard.
 
-**The concrete insight:** accounts that already churned were higher-margin on average ($228) than the accounts that stayed ($185) — the customers leaving are not the marginal ones. That single number is why this piece ranks accounts by risk *and* value instead of just counting logos. A second, GTM-facing one: the acquisition channel bringing in the most customers (Channel/Campaign A) also has the worst retention (12.6% vs. 6.0% for Channel B) — volume and quality of acquisition are not the same thing here.
+**The concrete insight:** revenue at risk concentrates in the highest-value accounts — the top 10% of active accounts by predicted risk hold 17.9% of active margin, and churned accounts carried higher average margin ($228) than retained ones ($185). Together they mean a retention program that prioritizes by headcount (call the most logos) is optimizing the wrong variable; prioritization has to be risk-*and*-value weighted, which is what this piece's ranking does. A second, GTM-facing insight: the acquisition channel bringing in the most customers (Channel/Campaign A) also has the worst retention (12.6% vs. 6.0% for Channel B) — volume and quality of acquisition are not the same thing here.
 
 ---
 
@@ -14,7 +14,9 @@ An end-to-end churn risk analysis for PowerCo, a mid-market gas and electricity 
 
 ## Why
 
-Churn rate alone understates what's at stake here: **accounts that already churned were higher-margin on average ($228) than the accounts that stayed ($185)**. A retention program that only counts logos, not margin, would miss that the customers actually walking out the door are disproportionately the valuable ones. This piece exists to answer the question a CS Ops or RevOps leader actually has: not "how many left," but "how much revenue is at risk, where is it concentrated, and what do we do about it."
+Churn rate alone understates what's at stake here: **the top 10% of active accounts by predicted risk hold 17.9% of active margin**, and accounts that already churned carried higher average margin ($228) than accounts that stayed ($185). A retention program that prioritizes by logo count, not margin, would spend its attention on the wrong accounts. This piece exists to answer the question a CS Ops or RevOps leader actually has: not "how many left," but "how much revenue is at risk, where is it concentrated, and what do we do about it."
+
+*Robustness check: this isn't a tenure artifact.* Net margin and tenure are essentially uncorrelated here (r = -0.0003), and within every tenure band, churned accounts still carry higher average margin than retained ones (1-3 yrs: $310 vs. $209; 4-6 yrs: $200 vs. $175; 7+ yrs: $245 vs. $237). Churn rate itself is flat across the bottom three margin quartiles (~9.1-9.4%) and only rises in the top quartile (10.9%) — the effect is concentrated at the high-value end, not a smooth trend, and it isn't explained away by how long the account has been on the books.
 
 ## Who
 
@@ -28,7 +30,7 @@ Built for a **Revenue / Sales Operations Analyst** audience — recruiters and h
 
 ## How
 
-1. **Clean & engineer** (`notebooks/01_churn_model.py`): dropped a redundant column (99.99% identical to another), treated an anonymized "MISSING" sales-channel code as its own category rather than a null, and engineered tenure/contract-timing/consumption features plus aggregated price-history features (mean, volatility, year-over-year change).
+1. **Clean & engineer** (`notebooks/01_churn_model.py`): dropped a redundant column (99.99% identical to another), treated an anonymized "MISSING" sales-channel code as its own category rather than a null, and engineered tenure/contract-timing/consumption features plus aggregated price-history features (mean, volatility, year-over-year change). Two provenance notes worth stating plainly: **net margin is a native column** in the source data, not derived from revenue under a cost assumption — and **"Channel A/B/C" and "Campaign A/B/C" are readability labels over real anonymized categorical codes** (`channel_sales`, `origin_up`) already present in the raw file, not invented segments.
 2. **Model, honestly**: tried logistic regression first (AUC 0.595), then added a full year of price history (AUC 0.599 — barely moved, meaning price sensitivity alone doesn't explain churn here, which mirrors the original BCG case's own conclusion). Random Forest did better (AUC 0.634) but is still weak-to-moderate — so the model is used **only to rank** accounts by relative risk, never to produce an absolute probability or dollar forecast. Health score is a **percentile** of that ranking (100 = safest in this book), not `1 − churn probability` — the model's `class_weight='balanced'` setting (needed for ranking quality on an imbalanced target) inflates raw probabilities well past the true ~9.7% base rate, and using them directly would have mislabeled most of the book as "at risk."
 3. **Driver analysis** (`notebooks/02_driver_analysis.py`): answered five questions directly from the raw data — sales channel, tenure, product count, dual-fuel bundling, and acquisition-campaign quality — independent of the model, so these findings don't inherit its limitations.
 4. **Per-account explainability** (Account Detail tab): for any single account, the three features where it deviates most from the book average (a z-score comparison against the model's top features) — not SHAP, deliberately: a shallow baseline model doesn't warrant that level of claimed rigor, and a simpler, honestly-labeled comparison is easier to defend than a more sophisticated technique bolted onto a model this weak.
