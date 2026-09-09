@@ -28,6 +28,7 @@ import plotly.graph_objects as go
 import plotly.io as pio
 import dash_bootstrap_components as dbc
 import dash_ag_grid as dag
+import dash
 from dash import Dash, dcc, html, Input, Output, State
 
 # resolved relative to this file, not the working directory the process is
@@ -589,18 +590,34 @@ account_book_tab = html.Div([
 
 DEFAULT_DETAIL_ID = clients.sort_values('risk_rank').iloc[0]['id']  # #1 highest-risk account, shown until someone searches
 
+# top 20 highest-risk accounts -- so this tab can be browsed, not just looked up by an ID you
+# already have in hand
+top20_risk = clients.sort_values('risk_rank').head(20)
+quick_pick_options = [
+    {'label': f"#{int(r['risk_rank'])} — {r['id'][:12]}… — {r['health_band']}, ${r['net_margin']:,.0f} margin", 'value': r['id']}
+    for _, r in top20_risk.iterrows()
+]
+
 account_detail_tab = html.Div([
     html.Div('Account detail', className='rb-section-title'),
     html.Div(
         "Why one specific account is flagged, and what to do about it -- not just the segment-level "
-        "story from the Drivers tab. Paste an account ID from the Account Book, or leave it as-is to "
-        "see the single highest-risk account in the book.",
+        "story from the Drivers tab.",
         className='rb-section-note',
     ),
-    dbc.Input(
-        id='detail-account-input', type='text', value=DEFAULT_DETAIL_ID,
-        placeholder='Paste an account ID…', className='rb-search', style={'maxWidth': '420px', 'marginBottom': '20px'},
-    ),
+    dbc.Row([
+        dbc.Col([
+            html.Div('Pick from the top 20 highest-risk accounts', className='rb-kpi-note', style={'marginBottom': '4px'}),
+            dbc.Select(id='detail-quick-pick', options=quick_pick_options, value=DEFAULT_DETAIL_ID),
+        ], md=6),
+        dbc.Col([
+            html.Div('...or paste any account ID from the Account Book', className='rb-kpi-note', style={'marginBottom': '4px'}),
+            dbc.Input(
+                id='detail-account-input', type='text', value='',
+                placeholder='Paste an account ID…', className='rb-search',
+            ),
+        ], md=6),
+    ], className='g-3 mb-3 align-items-end'),
     html.Div(id='account-detail-content'),
 ])
 
@@ -642,11 +659,16 @@ for _cid in ACTION_CARD_IDS:
 
 @app.callback(
     Output('account-detail-content', 'children'),
+    Input('detail-quick-pick', 'value'),
     Input('detail-account-input', 'value'),
 )
-def render_account_detail(account_id):
+def render_account_detail(quick_pick_id, typed_id):
+    # whichever control the user touched most recently wins; on first load
+    # (nothing triggered yet) fall back to the quick-pick default
+    triggered = dash.ctx.triggered_id
+    account_id = typed_id if triggered == 'detail-account-input' else quick_pick_id
     if not account_id:
-        return html.Div("Paste an account ID above.", className='rb-kpi-note')
+        return html.Div("Pick an account above, or paste an ID.", className='rb-kpi-note')
     match = clients[clients['id'] == account_id.strip()]
     if match.empty:
         return html.Div(

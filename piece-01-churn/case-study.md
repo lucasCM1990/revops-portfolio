@@ -58,12 +58,6 @@ Each driver finding ends in a named action, not a chart:
 
 The Account Detail tab applies the same logic one account at a time: real deviation from the book average → a specific, rule-based recommended action → a real dollar figure (that account's own margin), so a CS rep opening a specific record gets a starting point, not just a score.
 
-## Interview talking points
-
-1. **"Walk me through a churn analysis you've done."** Lead with the finding, not the tool: churned accounts were higher-margin than retained ones, which flips the usual "focus on your biggest logos" instinct — the actual priority list has to be risk-and-value weighted, which is what the top-decile ranking does. At Honda, the same logic applied to dealer-network retention: the highest-volume dealers weren't automatically the ones needing the most attention.
-2. **"How do you know your model is any good?"** It isn't, particularly — AUC 0.634 is weak-to-moderate, and I say so in the dashboard itself. The response to a weak model isn't to oversell it; it's to constrain what you let it claim. Here that meant ranking only, never an absolute dollar forecast, and computing GRR and the driver findings independently of the model so the parts a stakeholder would actually act on don't depend on it being strong.
-3. **"How do you turn an analysis into something teams actually do?"** Every finding on the Drivers and Account Detail tabs carries a 5W2H action with the owning department named — this is the same discipline as running cross-functional KPI governance across a 29-dealership network: a number without an owner and a next step doesn't move.
-
 ---
 
 *Provenance: curated public dataset (Kaggle mirror of the BCG X Data Science Job Simulation case). No data from any current or former employer appears anywhere in this piece.*

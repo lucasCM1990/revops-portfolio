@@ -5,7 +5,7 @@ of the BCG X Data Science Job Simulation case — a B2B/SME energy retailer,
 referred to in the data as "PowerCo") standing in for an operational churn
 analysis. Not real employer data.
 
-**[Full write-up: case-study.md](case-study.md)** (methodology, findings, recommended actions, interview talking points) · **[Live dashboard](https://revops-portfolio.onrender.com)**
+**[Full write-up: case-study.md](case-study.md)** (methodology, findings, recommended actions) · **[Live dashboard](https://revops-portfolio.onrender.com)**
 
 ## What's here
 
@@ -22,7 +22,7 @@ analysis. Not real employer data.
   (searchable/filterable grid), Account Detail (per-account risk explanation
   and recommendation).
 - `case-study.md` — the narrative write-up: what/why/who/where/how/how much/
-  the decision each finding enables, plus interview talking points.
+  the decision each finding enables.
 - `data/clean/` — the CSV outputs of both scripts (small; committed).
 - `data/raw/` — not committed; see `SOURCE.md` for exactly where to download it.
 
