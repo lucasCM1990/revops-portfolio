@@ -5,16 +5,24 @@ of the BCG X Data Science Job Simulation case — a B2B/SME energy retailer,
 referred to in the data as "PowerCo") standing in for an operational churn
 analysis. Not real employer data.
 
+**[Full write-up: case-study.md](case-study.md)** (methodology, findings, recommended actions, interview talking points) · **[Live dashboard](https://revops-portfolio.onrender.com)**
+
 ## What's here
 
 - `notebooks/01_churn_model.py` — cleans the raw data, engineers client + price
   features, trains a baseline Random Forest churn model, ranks active accounts
-  by relative risk, and computes GRR / churn rate.
+  by relative risk, computes GRR / churn rate, and derives each account's top
+  deviation factors (for the Account Detail tab).
 - `notebooks/02_driver_analysis.py` — answers five specific retention questions
   (sales channel, tenure, product count, dual-fuel bundling, acquisition
   campaign quality) directly from the raw data.
-- `dashboard/app.py` — a Dash app ("Retention Book") presenting the results:
-  KPI cards, driver charts, and a searchable/filterable account book.
+- `dashboard/app.py` — a Dash app ("Retention Book") presenting the results
+  across four tabs: Overview (KPIs, risk concentration), Drivers (five
+  questions, each with a 5W2H recommended action), Account Book
+  (searchable/filterable grid), Account Detail (per-account risk explanation
+  and recommendation).
+- `case-study.md` — the narrative write-up: what/why/who/where/how/how much/
+  the decision each finding enables, plus interview talking points.
 - `data/clean/` — the CSV outputs of both scripts (small; committed).
 - `data/raw/` — not committed; see `SOURCE.md` for exactly where to download it.
 
@@ -23,7 +31,7 @@ analysis. Not real employer data.
 ```bash
 # 1. Download the raw data — see data/raw/SOURCE.md
 # 2. From this folder:
-pip install pandas numpy scikit-learn plotly dash dash-bootstrap-components dash-ag-grid
+pip install scikit-learn -r dashboard/requirements.txt
 python3 notebooks/01_churn_model.py
 python3 notebooks/02_driver_analysis.py
 cd dashboard && python3 app.py
