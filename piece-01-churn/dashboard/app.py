@@ -28,7 +28,7 @@ import plotly.graph_objects as go
 import plotly.io as pio
 import dash_bootstrap_components as dbc
 import dash_ag_grid as dag
-from dash import Dash, dcc, html, Input, Output
+from dash import Dash, dcc, html, Input, Output, State
 
 # resolved relative to this file, not the working directory the process is
 # started from -- matters once this runs under gunicorn on a host like Render
@@ -156,13 +156,45 @@ fig_campaign = px.bar(
 fig_campaign.update_traces(marker_color=ACCENT)
 fig_campaign.update_layout(height=260, showlegend=False)
 
-def question_card(question, chart, answer):
+def action_panel(action):
+    """5W2H recommended-action block: what/why/who/when/where/how/how much,
+    plus which departments own it and whether it warrants a PDCA follow-up
+    cycle. This is business judgment built on the real numbers above it, not
+    itself a number pulled from the data -- labelled as a recommendation, not
+    a finding."""
+    rows = [
+        ('What', action['what']), ('Why', action['why']), ('Who', action['who']),
+        ('When', action['when']), ('Where', action['where']), ('How', action['how']),
+        ('How much', action['how_much']),
+    ]
     return html.Div([
+        html.Div([html.Span(label, className='rb-5w2h-label'), html.Span(value)], className='rb-5w2h-row')
+        for label, value in rows
+    ] + [
+        html.Div(
+            'PDCA follow-up recommended — this is an ongoing process change, not a one-time fix.'
+            if action['pdca'] else
+            'One-time correction — no PDCA cycle needed, nothing ongoing to monitor.',
+            className='rb-pdca-note',
+        ),
+    ], className='rb-action-panel')
+
+def question_card(question, chart, answer, action=None, card_id=None):
+    children = [
         *corners(),
         html.Div(question, className='rb-question'),
         dcc.Graph(figure=chart, config={'displayModeBar': False}),
         html.Div(answer, className='rb-kpi-note', style={'marginTop': '4px'}),
-    ], className='rb-card blueprint', style={'marginBottom': '8px'})
+    ]
+    if action is not None:
+        children += [
+            dbc.Button(
+                'Recommended action (5W2H) ▾', id=f'{card_id}-toggle', n_clicks=0,
+                className='rb-action-toggle', color='link',
+            ),
+            dbc.Collapse(action_panel(action), id=f'{card_id}-collapse', is_open=False),
+        ]
+    return html.Div(children, className='rb-card blueprint', style={'marginBottom': '8px'})
 
 # ---------- KPI cards ----------
 def corners():
@@ -316,6 +348,59 @@ overview_tab = html.Div([
     ], className='mb-5 g-4'),
 ])
 
+# ---------- recommended actions (5W2H) -- business judgment on top of the real findings above ----------
+ACTION_CHANNEL = {
+    'what': 'Audit sales qualification and first-90-day onboarding specific to Channel A.',
+    'why': 'Channel A churns at 12.1% vs. 5.6% for Channel C — and Channel C also carries higher '
+           'average margin ($238 vs. $199). Same product, worse fit at the channel level.',
+    'who': 'Sales Ops (process audit) + Customer Success (onboarding redesign)',
+    'when': 'Before the next acquisition push through this channel — target: next quarter',
+    'where': 'All Channel A accounts, new and existing',
+    'how': "Compare qualification criteria and first-90-day touchpoints between Channel A and Channel C; close the gap.",
+    'how_much': '~443 accounts churn in excess of Channel C\'s rate — about $88,100/year in margin at stake.',
+    'pdca': True,
+}
+ACTION_TENURE = {
+    'what': 'Automated proactive renewal/health-check touchpoint triggered at month 30.',
+    'why': 'Churn peaks in years 3–4 (12–14%) vs. 7.1% at year 6 — a specific early-life risk window, not a steady decline.',
+    'who': 'Customer Success / Account Management',
+    'when': 'Ongoing — triggered automatically as each account approaches its 3rd anniversary',
+    'where': 'All accounts approaching the year-3 mark',
+    'how': 'CS workflow trigger + a structured check-in call/review at month 30',
+    'how_much': '$217,901 in margin already lost historically from the years 3–4 cohort — the size of the problem this targets.',
+    'pdca': True,
+}
+ACTION_PRODUCTS = {
+    'what': 'Correct internal messaging: stop presenting cross-sell as a churn-reduction lever.',
+    'why': '1 product churns at 10.0%, 4+ products at 8.7% — too small a gap to call it a retention strategy.',
+    'who': 'RevOps (KPI/metric definitions) + Sales enablement (playbook messaging)',
+    'when': 'Next sales enablement content refresh',
+    'where': 'Internal playbooks only — not a customer-facing change',
+    'how': 'Reframe cross-sell as revenue expansion in CS/Sales materials, not as a retention play',
+    'how_much': 'N/A — this is a correction, not an investment; it avoids spending retention effort on a lever the data doesn\'t support.',
+    'pdca': False,
+}
+ACTION_FUEL = {
+    'what': 'Targeted gas cross-sell campaign for electricity-only accounts, prioritized by risk score.',
+    'why': 'Dual-fuel accounts churn less (8.2% vs. 10.1%) AND carry higher average margin ($249 vs. $176) — a margin upside, not just a retention story.',
+    'who': 'Marketing (campaign) + Sales (offer/close) + Customer Success (targeting)',
+    'when': 'Next campaign planning cycle',
+    'where': '11,955 electricity-only accounts, highest-risk decile first',
+    'how': 'Bundle offer for adding gas service; outreach list = electricity-only ∩ high risk',
+    'how_much': '~$87,000/year in margin upside from the average per-account gap alone, before counting any churn reduction.',
+    'pdca': True,
+}
+ACTION_CAMPAIGN = {
+    'what': "Review Campaign A's targeting/qualification, or shift acquisition budget mix toward Campaign B/D-like profiles.",
+    'why': 'Campaign A brings the most accounts (7,097) but the worst churn (12.6%); Campaign B brings fewer (4,294) at much better retention (6.0%).',
+    'who': 'Marketing (campaign strategy) + Finance/RevOps (budget allocation)',
+    'when': 'Next budget planning cycle',
+    'where': 'Acquisition spend allocation across campaigns',
+    'how': 'Build an LTV-adjusted return comparison per campaign before the next budget cycle — not just cost-per-acquisition',
+    'how_much': "Not enough data here for a real number — this needs an LTV model (customer lifetime, not just this snapshot) before quoting a dollar figure. Flagged as a gap, not guessed.",
+    'pdca': True,
+}
+
 drivers_tab = html.Div([
     html.Div('What drives churn in this book?', className='rb-section-title'),
     html.Div(
@@ -328,8 +413,9 @@ drivers_tab = html.Div([
             'Does the sales channel affect churn?',
             fig_channel,
             "Channel A brings in 46% of all accounts and churns at 12.1% — well above the 9.7% book "
-            "average. Channel C (1,843 accounts) churns at just 5.6%. Same product, different result "
-            "depending on how the customer was sold to.",
+            "average. Channel C (1,843 accounts) churns at just 5.6%, and also carries higher average "
+            "margin. Same product, worse fit at the channel level.",
+            action=ACTION_CHANNEL, card_id='action-channel',
         ), md=6),
         dbc.Col(question_card(
             'Does tenure protect against churn?',
@@ -337,6 +423,7 @@ drivers_tab = html.Div([
             "Mostly yes, but not right away: churn is highest in years 3–4 (12–14%) and drops to its "
             "lowest around year 6 (7.1%, the largest single cohort). The relationship has to survive "
             "the first few years before tenure starts working in the customer's favor.",
+            action=ACTION_TENURE, card_id='action-tenure',
         ), md=6),
     ], className='g-4 mb-4'),
     dbc.Row([
@@ -345,12 +432,15 @@ drivers_tab = html.Div([
             fig_products,
             "Barely any effect: 10.0% churn on 1 product vs. 8.7% on 4+. Cross-sell may still be worth "
             "doing for revenue, but this data doesn't support it as a retention lever on its own.",
+            action=ACTION_PRODUCTS, card_id='action-products',
         ), md=6),
         dbc.Col(question_card(
             'Are dual-fuel customers stickier than single-service ones?',
             fig_fuel,
-            "Yes, modestly: 8.2% churn for electricity + gas customers vs. 10.1% for electricity only. "
-            "Bundling a second service correlates with staying longer.",
+            "Yes, and it's not just retention: dual-fuel accounts churn less (8.2% vs. 10.1%) AND carry "
+            "higher average margin ($249 vs. $176) than electricity-only accounts. Bundling a second "
+            "service pays twice.",
+            action=ACTION_FUEL, card_id='action-fuel',
         ), md=6),
     ], className='g-4 mb-4'),
     dbc.Row([
@@ -360,9 +450,12 @@ drivers_tab = html.Div([
             "Campaign A brings the most accounts (7,097) at solid margin, but also the worst churn "
             "(12.6%). Campaign B brings fewer accounts at lower average margin, but keeps them far "
             "better (6.0% churn). Volume and quality are not the same channel here.",
+            action=ACTION_CAMPAIGN, card_id='action-campaign',
         ), md=12),
     ], className='g-4 mb-4'),
 ])
+
+ACTION_CARD_IDS = ['action-channel', 'action-tenure', 'action-products', 'action-fuel', 'action-campaign']
 
 account_search = dbc.Input(
     id='account-search',
@@ -403,6 +496,17 @@ def filter_grid(selected_band, search_text):
     if search_text:
         filtered = filtered[filtered['id'].str.contains(search_text, case=False, na=False)]
     return filtered.sort_values('health_score').to_dict('records')
+
+
+# one toggle callback per action panel -- five small callbacks, each trivial,
+# rather than one clever pattern-matching callback for a fixed, known set of cards
+for _cid in ACTION_CARD_IDS:
+    app.callback(
+        Output(f'{_cid}-collapse', 'is_open'),
+        Input(f'{_cid}-toggle', 'n_clicks'),
+        State(f'{_cid}-collapse', 'is_open'),
+        prevent_initial_call=True,
+    )(lambda n_clicks, is_open: not is_open)
 
 
 if __name__ == '__main__':

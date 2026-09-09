@@ -272,6 +272,49 @@ body {
     border-bottom: 2px solid var(--color-accent-700);
 }
 
+.rb-action-toggle {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 12.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-accent-700) !important;
+    padding: 0 !important;
+    margin-top: var(--space-3);
+    text-decoration: none !important;
+}
+
+.rb-action-panel {
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px dashed var(--color-divider);
+}
+
+.rb-5w2h-row {
+    display: flex;
+    gap: var(--space-3);
+    font-size: 13px;
+    padding: 3px 0;
+    line-height: 1.45;
+}
+
+.rb-5w2h-label {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-accent-700);
+    flex: 0 0 90px;
+}
+
+.rb-pdca-note {
+    margin-top: var(--space-2);
+    font-size: 12px;
+    font-style: italic;
+    color: var(--color-neutral-600);
+}
+
 .rb-search {
     font-family: var(--font-body);
     font-size: 14px;
