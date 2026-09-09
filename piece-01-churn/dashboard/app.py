@@ -174,7 +174,7 @@ def action_panel(action):
         html.Div(
             'PDCA follow-up recommended — this is an ongoing process change, not a one-time fix.'
             if action['pdca'] else
-            'One-time correction — no PDCA cycle needed, nothing ongoing to monitor.',
+            'No PDCA cycle needed here — a single action to log and track (e.g. in CRM), not a repeatable process to monitor.',
             className='rb-pdca-note',
         ),
     ], className='rb-action-panel')
@@ -401,6 +401,119 @@ ACTION_CAMPAIGN = {
     'pdca': True,
 }
 
+# ---------- per-account recommended action (Account Detail tab) ----------
+# Keyed off the #1 standout factor from notebooks/01_churn_model.py (a z-score
+# comparison against the book average on the model's top features -- not SHAP,
+# see the note in that file for why). Direction-aware where it changes the
+# recommendation; a shared template otherwise. Rule-based on purpose: a lookup
+# table is something Lucas can read and defend line by line, unlike a second
+# model making the recommendation.
+FACTOR_ACTION_TEMPLATES = {
+    ('recent consumption drop', 'above'): {
+        'what': 'Urgent usage-check call',
+        'why': "This account's usage has dropped more sharply than most in the book — historically the single "
+               "strongest churn signal here (see Overview).",
+        'who': 'Customer Success', 'when': 'Within 2 weeks — this is the most time-sensitive signal available',
+        'how': 'Confirm whether the drop is operational (e.g. seasonal, downsizing) or dissatisfaction-driven',
+    },
+    ('annual electricity consumption', 'below'): {
+        'what': 'Usage check-in call',
+        'why': "Usage is well below the book average.",
+        'who': 'Customer Success', 'when': 'Before next renewal',
+        'how': 'Understand whether usage is stabilizing at a lower level or still declining',
+    },
+    ('annual electricity consumption', 'above'): {
+        'what': 'High-touch proactive outreach',
+        'why': "Usage is well above the book average — a high-volume account.",
+        'who': 'Account Management', 'when': 'Proactively, ahead of any renewal',
+        'how': 'Losing an account this size would be a large single hit — treat as high-touch regardless of risk score alone',
+    },
+    ('tenure', 'below'): {
+        'what': 'Early-tenure check-in',
+        'why': 'This is a newer account, inside the higher-risk early-tenure window (years 3–4, see Drivers tab).',
+        'who': 'Customer Success', 'when': 'Now, ahead of the year-3 mark',
+        'how': 'Apply the standard early-tenure check-in motion (see the Drivers tab tenure action)',
+    },
+    ('tenure', 'above'): {
+        'what': 'Personal outreach from the account owner',
+        'why': 'This is a long-tenured account still showing up as high risk — loyalty alone is not protecting it.',
+        'who': 'Account Management', 'when': 'Soon — this is not the expected profile for this risk level',
+        'how': 'Investigate what changed recently rather than assuming tenure will hold',
+    },
+    ('price volatility (off-peak)', 'above'): {
+        'what': 'Rate plan review',
+        'why': "This account's price has moved around more than most, in the off-peak rate.",
+        'who': 'Sales / Account Management', 'when': 'Next pricing review cycle',
+        'how': 'Review the rate plan for stability; consider a fixed-rate offer',
+    },
+    ('price volatility (peak)', 'above'): {
+        'what': 'Rate plan review',
+        'why': "This account's peak-rate price has moved around more than most.",
+        'who': 'Sales / Account Management', 'when': 'Next pricing review cycle',
+        'how': 'Review the rate plan for stability; consider a fixed-rate offer',
+    },
+    ('average price level (off-peak)', 'above'): {
+        'what': 'Rate review conversation',
+        'why': 'Paying an above-average off-peak rate.',
+        'who': 'Sales / Account Management', 'when': 'Next renewal conversation',
+        'how': 'Get ahead of a competitor offering a lower rate',
+    },
+    ('net margin', 'above'): {
+        'what': 'White-glove outreach',
+        'why': 'This is a high-margin account — the financial stakes of losing it are larger than most.',
+        'who': 'Account Management', 'when': 'Now',
+        'how': 'Personal, non-automated outreach given what is at stake',
+    },
+    ('net margin', 'below'): {
+        'what': 'Low-touch check-in',
+        'why': 'This is a lower-margin account.',
+        'who': 'Customer Success', 'when': 'Next scheduled cycle',
+        'how': 'Email or self-serve check-in is proportionate here',
+    },
+    ('time since the last account change', 'above'): {
+        'what': 'Proactive account review',
+        'why': 'No changes on this account in longer than most — a possible disengagement signal.',
+        'who': 'Customer Success', 'when': 'Next scheduled cycle',
+        'how': 'Stale accounts rarely self-report a problem — check in before they raise one',
+    },
+    ('time since last renewal', 'above'): {
+        'what': 'Renewal-readiness conversation',
+        'why': 'Longer than average since the last renewal touchpoint.',
+        'who': 'Customer Success / Account Management', 'when': 'Now',
+        'how': 'Schedule a renewal-readiness conversation',
+    },
+    ('time to contract end', 'below'): {
+        'what': 'Renewal conversation',
+        'why': 'Contract end is closer than average.',
+        'who': 'Customer Success / Account Management', 'when': 'Now, ahead of the contract date',
+        'how': 'Standard renewal conversation, timed to the actual contract date',
+    },
+}
+DEFAULT_ACTION_TEMPLATE = {
+    'what': 'Account review',
+    'why': 'This factor stands out relative to the book average.',
+    'who': 'Customer Success', 'when': 'Next scheduled cycle',
+    'how': 'Review to confirm whether this is a risk signal or a false positive',
+}
+
+def build_account_action(row):
+    key = (row['factor_1_label'], row['factor_1_direction'])
+    template = FACTOR_ACTION_TEMPLATES.get(key, DEFAULT_ACTION_TEMPLATE)
+    why_all = ' · '.join(
+        f"{row[f'factor_{i}_label']} ({row[f'factor_{i}_direction']} average)"
+        for i in (1, 2, 3) if row[f'factor_{i}_label']
+    )
+    return {
+        'what': template['what'],
+        'why': f"{template['why']} Full picture for this account: {why_all}.",
+        'who': template['who'],
+        'when': template['when'],
+        'where': 'This account only',
+        'how': template['how'],
+        'how_much': f"${row['net_margin']:,.0f} in net margin on this account.",
+        'pdca': False,
+    }
+
 drivers_tab = html.Div([
     html.Div('What drives churn in this book?', className='rb-section-title'),
     html.Div(
@@ -474,12 +587,30 @@ account_book_tab = html.Div([
     accounts_grid,
 ])
 
+DEFAULT_DETAIL_ID = clients.sort_values('risk_rank').iloc[0]['id']  # #1 highest-risk account, shown until someone searches
+
+account_detail_tab = html.Div([
+    html.Div('Account detail', className='rb-section-title'),
+    html.Div(
+        "Why one specific account is flagged, and what to do about it -- not just the segment-level "
+        "story from the Drivers tab. Paste an account ID from the Account Book, or leave it as-is to "
+        "see the single highest-risk account in the book.",
+        className='rb-section-note',
+    ),
+    dbc.Input(
+        id='detail-account-input', type='text', value=DEFAULT_DETAIL_ID,
+        placeholder='Paste an account ID…', className='rb-search', style={'maxWidth': '420px', 'marginBottom': '20px'},
+    ),
+    html.Div(id='account-detail-content'),
+])
+
 app.layout = dbc.Container([
     header,
     dbc.Tabs([
         dbc.Tab(overview_tab, label='Overview', tab_id='overview'),
         dbc.Tab(drivers_tab, label='Drivers', tab_id='drivers'),
         dbc.Tab(account_book_tab, label='Account book', tab_id='book'),
+        dbc.Tab(account_detail_tab, label='Account detail', tab_id='detail'),
     ], id='rb-tabs', active_tab='overview', className='rb-tabs mb-4'),
 ], fluid=True, style={'maxWidth': '1200px', 'padding': '32px 24px 60px'})
 
@@ -507,6 +638,53 @@ for _cid in ACTION_CARD_IDS:
         State(f'{_cid}-collapse', 'is_open'),
         prevent_initial_call=True,
     )(lambda n_clicks, is_open: not is_open)
+
+
+@app.callback(
+    Output('account-detail-content', 'children'),
+    Input('detail-account-input', 'value'),
+)
+def render_account_detail(account_id):
+    if not account_id:
+        return html.Div("Paste an account ID above.", className='rb-kpi-note')
+    match = clients[clients['id'] == account_id.strip()]
+    if match.empty:
+        return html.Div(
+            f'No account found with ID "{account_id}". IDs are case-sensitive and come from the Account Book tab.',
+            className='rb-kpi-note',
+        )
+    row = match.iloc[0]
+    action = build_account_action(row)
+
+    profile = dbc.Row([
+        dbc.Col(kpi_card('Health score', f"{int(row['health_score'])}/100", row['health_band']), md=3),
+        dbc.Col(kpi_card('Net margin', f"${row['net_margin']:,.0f}", f"Risk rank {int(row['risk_rank']):,} of {len(clients):,}"), md=3),
+        dbc.Col(kpi_card('Tenure', f"{int(row['tenure_years'])} yrs", f"{int(row['nb_prod_act'])} product(s) contracted"), md=3),
+        dbc.Col(kpi_card('Days to contract end', f"{int(row['days_to_contract_end']):,}", f"Churn probability (model, uncalibrated): {row['churn_probability']:.1%}"), md=3),
+    ], className='g-3 mb-4')
+
+    why_rows = [
+        html.Div(f"{row[f'factor_{i}_label']} — {row[f'factor_{i}_direction']} the book average", className='rb-finding')
+        for i in (1, 2, 3) if row[f'factor_{i}_label']
+    ]
+    why_panel = html.Div([
+        *corners(),
+        html.Div('Why this account is flagged', className='rb-question'),
+        html.Div(
+            "Not the model's internal logic (that would need SHAP, which this baseline doesn't use) — just "
+            "where this account sits furthest from the book average on the features the model leans on most.",
+            className='rb-kpi-note', style={'marginBottom': '8px'},
+        ),
+        *why_rows,
+    ], className='rb-card blueprint mb-4')
+
+    action_card = html.Div([
+        *corners(),
+        html.Div(f"Recommended action: {action['what']}", className='rb-question'),
+        action_panel(action),
+    ], className='rb-card blueprint')
+
+    return html.Div([profile, why_panel, action_card])
 
 
 if __name__ == '__main__':

@@ -105,6 +105,48 @@ importances = pd.Series(clf.feature_importances_, index=FEATURES).sort_values(as
 print("\nFeature importances:")
 print(importances)
 
+# ---------- per-account "why is this account flagged" (no SHAP -- see note below) ----------
+# For each account, compare its own value on the model's top features against the book
+# average (z-score) and keep the 3 features where it deviates the most. This is simpler
+# and more honest than it sounds: it does NOT explain the model's internal logic (that
+# would need something like SHAP), it only says "here is what is statistically unusual
+# about this specific account, on the variables the model leans on most" -- enough to
+# give a CS rep a real, defensible starting point for the call, without claiming more
+# rigor than a shallow Random Forest baseline actually supports.
+TOP_FACTOR_FEATURES = importances.head(8).index.tolist()
+FACTOR_LABELS = {
+    'cons_12m': 'annual electricity consumption',
+    'days_since_last_modif': 'time since the last account change',
+    'tenure_years': 'tenure',
+    'price_off_peak_var_std': 'price volatility (off-peak)',
+    'net_margin': 'net margin',
+    'price_off_peak_var_mean': 'average price level (off-peak)',
+    'consumption_drop_ratio': 'recent consumption drop',
+    'days_since_last_renewal': 'time since last renewal',
+    'days_to_contract_end': 'time to contract end',
+    'price_peak_var_std': 'price volatility (peak)',
+}
+
+factor_z = pd.DataFrame(index=model_df.index)
+for feat in TOP_FACTOR_FEATURES:
+    mean, std = model_df[feat].mean(), model_df[feat].std()
+    factor_z[feat] = (model_df[feat] - mean) / std if std > 0 else 0
+
+def top_factors_for_row(z_row, n=3):
+    ranked = z_row.abs().sort_values(ascending=False).head(n)
+    out = []
+    for feat in ranked.index:
+        direction = 'above' if z_row[feat] > 0 else 'below'
+        out.append((FACTOR_LABELS.get(feat, feat), direction))
+    while len(out) < n:
+        out.append(('', ''))
+    return out
+
+factor_results = factor_z.apply(lambda row: top_factors_for_row(row), axis=1)
+for i in range(3):
+    model_df[f'factor_{i+1}_label'] = factor_results.apply(lambda r: r[i][0])
+    model_df[f'factor_{i+1}_direction'] = factor_results.apply(lambda r: r[i][1])
+
 # NOTE on AUC (~0.63): weak-to-moderate discrimination, consistent with this being a
 # known low-signal dataset — even with full price history, price alone barely predicts
 # churn here (this mirrors the original BCG case's own conclusion that price sensitivity
@@ -139,8 +181,9 @@ print(f"\nTop 10% by predicted churn risk ({top_n} accounts) hold "
       f"only the ranking that produced this list comes from the model.")
 
 # ---------- export ----------
+factor_cols = [f'factor_{i+1}_label' for i in range(3)] + [f'factor_{i+1}_direction' for i in range(3)]
 export_cols = ['id', 'tenure_years', 'nb_prod_act', 'pow_max', 'cons_12m', 'net_margin',
-               'has_gas_flag', 'days_to_contract_end', 'churn_probability', 'risk_rank', 'risk_decile']
+               'has_gas_flag', 'days_to_contract_end', 'churn_probability', 'risk_rank', 'risk_decile'] + factor_cols
 
 active[export_cols].to_csv(f'{CLEAN_DIR}/clients_scored.csv', index=False)
 priority[export_cols].to_csv(f'{CLEAN_DIR}/priority_accounts_top10pct.csv', index=False)
