@@ -4,6 +4,8 @@
 
 A retention / CS Ops analysis of a B2B energy retailer's customer book: who is at risk, why, and what to do about each finding — not just a churn dashboard.
 
+**The concrete insight:** accounts that already churned were higher-margin on average ($228) than the accounts that stayed ($185) — the customers leaving are not the marginal ones. That single number is why this piece ranks accounts by risk *and* value instead of just counting logos. A second, GTM-facing one: the acquisition channel bringing in the most customers (Channel/Campaign A) also has the worst retention (12.6% vs. 6.0% for Channel B) — volume and quality of acquisition are not the same thing here.
+
 ---
 
 ## What

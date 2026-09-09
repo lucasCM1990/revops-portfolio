@@ -5,3 +5,4 @@ built on curated public datasets (never real employer data). See each piece's
 own README for details.
 
 - [`piece-01-churn/`](piece-01-churn/) — Customer Health & Churn Risk (retention / CS Ops)
+  **What this shows:** identifies revenue at risk and prioritizes accounts for CS to act on.
