@@ -293,6 +293,34 @@ app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.title = 'Retention Book'
 server = app.server  # the Flask instance gunicorn serves in production
 
+_OG_DESCRIPTION = (
+    'Customer health & churn risk dashboard for a B2B energy retailer (14,606 accounts). '
+    'The top 10% riskiest accounts hold 17.9% of active margin. Built with Python, '
+    'scikit-learn and Plotly Dash.'
+)
+app.index_string = f'''<!DOCTYPE html>
+<html>
+    <head>
+        {{%metas%}}
+        <title>{{%title%}}</title>
+        <meta property="og:title" content="Retention Book — Customer Health &amp; Churn Risk" />
+        <meta property="og:description" content="{_OG_DESCRIPTION}" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://revops-portfolio.onrender.com" />
+        <meta name="description" content="{_OG_DESCRIPTION}" />
+        {{%favicon%}}
+        {{%css%}}
+    </head>
+    <body>
+        {{%app_entry%}}
+        <footer>
+            {{%config%}}
+            {{%scripts%}}
+            {{%renderer%}}
+        </footer>
+    </body>
+</html>'''
+
 header = html.Div([
     html.Div([
         html.Div('RETENTION BOOK', className='rb-title'),
