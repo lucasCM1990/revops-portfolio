@@ -271,7 +271,7 @@ grid_columns = [
 accounts_grid = dag.AgGrid(
     id='accounts-grid',
     columnDefs=grid_columns,
-    rowData=clients.sort_values('health_score').to_dict('records'),
+    rowData=clients.sort_values('risk_rank').to_dict('records'),
     defaultColDef={'sortable': True, 'filter': True, 'resizable': True},
     columnSize='responsiveSizeToFit',
     className='ag-theme-quartz',
@@ -673,7 +673,7 @@ def filter_grid(selected_band, search_text):
         filtered = filtered[filtered['health_band'] == selected_band]
     if search_text:
         filtered = filtered[filtered['id'].str.contains(search_text, case=False, na=False)]
-    return filtered.sort_values('health_score').to_dict('records')
+    return filtered.sort_values('risk_rank').to_dict('records')
 
 
 # one toggle callback per action panel -- five small callbacks, each trivial,
