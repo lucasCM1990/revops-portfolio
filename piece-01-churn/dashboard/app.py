@@ -262,8 +262,10 @@ grid_columns = [
     {'field': 'net_margin', 'headerName': 'Net margin ($)', 'flex': 1,
      'valueFormatter': {'function': "d3.format(',.2f')(params.value)"}},
     {'field': 'days_to_contract_end', 'headerName': 'Days to contract end', 'flex': 1},
-    {'field': 'churn_probability', 'headerName': 'Churn probability', 'flex': 1,
-     'valueFormatter': {'function': "d3.format('.1%')(params.value)"}},
+    # Relative risk rank, not a probability: the model is uncalibrated (class_weight='balanced'),
+    # so raw predict_proba values are not shown anywhere a reader could take them as a forecast.
+    {'field': 'risk_rank', 'headerName': 'Risk rank (1 = riskiest)', 'flex': 1,
+     'valueFormatter': {'function': "d3.format(',')(params.value)"}},
 ]
 
 accounts_grid = dag.AgGrid(
@@ -710,7 +712,7 @@ def render_account_detail(quick_pick_id, typed_id):
         dbc.Col(kpi_card('Health score', f"{int(row['health_score'])}/100", row['health_band']), md=3),
         dbc.Col(kpi_card('Net margin', f"${row['net_margin']:,.0f}", f"Risk rank {int(row['risk_rank']):,} of {len(clients):,}"), md=3),
         dbc.Col(kpi_card('Tenure', f"{int(row['tenure_years'])} yrs", f"{int(row['nb_prod_act'])} product(s) contracted"), md=3),
-        dbc.Col(kpi_card('Days to contract end', f"{int(row['days_to_contract_end']):,}", f"Churn probability (model, uncalibrated): {row['churn_probability']:.1%}"), md=3),
+        dbc.Col(kpi_card('Days to contract end', f"{int(row['days_to_contract_end']):,}", f"Risk decile {int(row['risk_decile'])} of 10 (1 = highest risk)"), md=3),
     ], className='g-3 mb-4')
 
     why_rows = [
